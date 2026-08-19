@@ -1,0 +1,533 @@
+-- =============================================
+-- Quuua-ragdoll💕 - Часть 1: UI & Загрузка
+-- TikTok: @symashedshi73
+-- =============================================
+
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
+local TweenService = game:GetService("TweenService")
+local Lighting = game:GetService("Lighting")
+
+local LocalPlayer = Players.LocalPlayer
+
+-- Создаем ScreenGui
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "QuuuaRagdollHub"
+ScreenGui.ResetOnSpawn = false
+
+local success = pcall(function()
+    ScreenGui.Parent = CoreGui
+end)
+if not success then
+    ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+end
+
+-- ==================== ЗАГРУЗОЧНЫЙ ЭКРАН С БЛЮРОМ ====================
+local BlurEffect = Instance.new("BlurEffect", Lighting)
+BlurEffect.Size = 0
+
+local LoadingFrame = Instance.new("Frame", ScreenGui)
+LoadingFrame.Size = UDim2.new(0, 320, 0, 160)
+LoadingFrame.Position = UDim2.new(0.5, -160, 0.5, -80)
+LoadingFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
+LoadingFrame.BorderSizePixel = 0
+Instance.new("UICorner", LoadingFrame).CornerRadius = UDim.new(0, 16)
+
+local LoadStroke = Instance.new("UIStroke", LoadingFrame)
+LoadStroke.Color = Color3.fromRGB(240, 90, 140)
+LoadStroke.Thickness = 2
+
+local LoadTitle = Instance.new("TextLabel", LoadingFrame)
+LoadTitle.Size = UDim2.new(1, 0, 0, 50)
+LoadTitle.Position = UDim2.new(0, 0, 0, 25)
+LoadTitle.BackgroundTransparency = 1
+LoadTitle.Text = "Quuua hub"
+LoadTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+LoadTitle.TextSize = 22
+LoadTitle.Font = Enum.Font.GothamBold
+
+local LoadSub = Instance.new("TextLabel", LoadingFrame)
+LoadSub.Size = UDim2.new(1, 0, 0, 30)
+LoadSub.Position = UDim2.new(0, 0, 0, 75)
+LoadSub.BackgroundTransparency = 1
+LoadSub.Text = "Загрузка скрипта..."
+LoadSub.TextColor3 = Color3.fromRGB(160, 160, 175)
+LoadSub.TextSize = 12
+LoadSub.Font = Enum.Font.GothamMedium
+
+-- Плавное появление загрузчика и блюра
+TweenService:Create(BlurEffect, TweenInfo.new(0.6), {Size = 18}):Play()
+
+-- Имитация загрузки и инициализация
+task.wait(1.5)
+LoadSub.Text = "TikTok: @symashedshi73"
+task.wait(1.2)
+
+TweenService:Create(LoadingFrame, TweenInfo.new(0.5), {BackgroundTransparency = 1, Size = UDim2.new(0, 280, 0, 140)}):Play()
+TweenService:Create(LoadTitle, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
+TweenService:Create(LoadSub, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
+TweenService:Create(LoadStroke, TweenInfo.new(0.5), {Transparency = 1}):Play()
+TweenService:Create(BlurEffect, TweenInfo.new(0.6), {Size = 0}):Play()
+task.wait(0.5)
+LoadingFrame:Destroy()
+BlurEffect:Destroy()
+
+-- ==================== ПЕРЕМЕННЫЕ И ТЕМЫ ====================
+_G.CurrentAccent = Color3.fromRGB(240, 90, 140)
+_G.StrokeThicknessVal = 2
+_G.isRGB = false
+_G.InteractiveElements = {}
+
+-- Главное окно
+local MainFrame = Instance.new("Frame", ScreenGui)
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 500, 0, 320)
+MainFrame.Position = UDim2.new(0.5, -250, 0.5, -160)
+MainFrame.BackgroundColor3 = Color3.fromRGB(16, 16, 22)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 16)
+
+local MainStroke = Instance.new("UIStroke", MainFrame)
+MainStroke.Color = _G.CurrentAccent
+MainStroke.Thickness = _G.StrokeThicknessVal
+table.insert(_G.InteractiveElements, MainStroke)
+
+-- Шапка
+local Header = Instance.new("Frame", MainFrame)
+Header.Size = UDim2.new(1, 0, 0, 42)
+Header.BackgroundColor3 = Color3.fromRGB(22, 22, 30)
+Header.BorderSizePixel = 0
+Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 16)
+
+local Title = Instance.new("TextLabel", Header)
+Title.Size = UDim2.new(1, -100, 1, 0)
+Title.Position = UDim2.new(0, 16, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "💕 Quuua-ragdoll"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 14
+Title.Font = Enum.Font.GothamBold
+Title.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Мини-плашка сворачивания (Quuua hub)
+local MiniBar = Instance.new("TextButton", ScreenGui)
+MiniBar.Name = "QuuuaMiniBar"
+MiniBar.Size = UDim2.new(0, 150, 0, 36)
+MiniBar.Position = UDim2.new(0.5, -75, 0.05, 0)
+MiniBar.BackgroundColor3 = Color3.fromRGB(16, 16, 22)
+MiniBar.Text = "💕 Quuua hub"
+MiniBar.TextColor3 = Color3.fromRGB(255, 255, 255)
+MiniBar.TextSize = 12
+MiniBar.Font = Enum.Font.GothamBold
+MiniBar.Visible = false
+MiniBar.Active = true
+MiniBar.Draggable = true
+Instance.new("UICorner", MiniBar).CornerRadius = UDim.new(0, 10)
+
+local MiniBarStroke = Instance.new("UIStroke", MiniBar)
+MiniBarStroke.Color = _G.CurrentAccent
+MiniBarStroke.Thickness = _G.StrokeThicknessVal
+table.insert(_G.InteractiveElements, MiniBarStroke)
+
+-- Кнопка Закрыть
+local CloseBtn = Instance.new("TextButton", Header)
+CloseBtn.Size = UDim2.new(0, 26, 0, 26)
+CloseBtn.Position = UDim2.new(1, -34, 0, 8)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 80)
+CloseBtn.Text = "✕"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.Font = Enum.Font.GothamBold
+Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 8)
+CloseBtn.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
+
+-- Кнопка Свернуть на половину (-)
+local MinimizeBtn = Instance.new("TextButton", Header)
+MinimizeBtn.Size = UDim2.new(0, 26, 0, 26)
+MinimizeBtn.Position = UDim2.new(1, -66, 0, 8)
+MinimizeBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 60)
+MinimizeBtn.Text = "–"
+MinimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinimizeBtn.Font = Enum.Font.GothamBold
+Instance.new("UICorner", MinimizeBtn).CornerRadius = UDim.new(0, 8)
+
+MinimizeBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = false
+    MiniBar.Visible = true
+end)
+
+MiniBar.MouseButton1Click:Connect(function()
+    MiniBar.Visible = false
+    MainFrame.Visible = true
+end)
+
+-- Боковое меню и области
+local Sidebar = Instance.new("ScrollingFrame", MainFrame)
+Sidebar.Size = UDim2.new(0, 130, 1, -50)
+Sidebar.Position = UDim2.new(0, 8, 0, 46)
+Sidebar.BackgroundTransparency = 1
+Sidebar.ScrollBarThickness = 2
+local SidebarLayout = Instance.new("UIListLayout", Sidebar)
+SidebarLayout.Padding = UDim.new(0, 4)
+
+local ContentArea = Instance.new("Frame", MainFrame)
+ContentArea.Size = UDim2.new(1, -145, 1, -50)
+ContentArea.Position = UDim2.new(0, 142, 0, 46)
+ContentArea.BackgroundTransparency = 1
+
+local activeTabContainer = nil
+
+local function UpdateThemeColor(newColor)
+    _G.CurrentAccent = newColor
+    for _, el in ipairs(_G.InteractiveElements) do
+        if el and el.Parent then
+            if el:IsA("UIStroke") then
+                el.Color = newColor
+            else
+                el.BackgroundColor3 = newColor
+            end
+        end
+    end
+end
+
+-- RGB цикл
+task.spawn(function()
+    local hue = 0
+    while true do
+        if _G.isRGB then
+            hue = (hue + 0.004) % 1
+            UpdateThemeColor(Color3.fromHSV(hue, 1, 1))
+        end
+        task.wait(0.03)
+    end
+end)
+
+function CreateTab(name)
+    local tabBtn = Instance.new("TextButton", Sidebar)
+    tabBtn.Size = UDim2.new(1, -4, 0, 34)
+    tabBtn.BackgroundTransparency = 1
+    tabBtn.Text = "  " .. name
+    tabBtn.TextColor3 = Color3.fromRGB(150, 150, 165)
+    tabBtn.TextSize = 11
+    tabBtn.Font = Enum.Font.GothamBold
+    tabBtn.TextXAlignment = Enum.TextXAlignment.Left
+
+    local container = Instance.new("ScrollingFrame", ContentArea)
+    container.Size = UDim2.new(1, 0, 1, 0)
+    container.BackgroundTransparency = 1
+    container.ScrollBarThickness = 3
+    container.Visible = false
+
+    local list = Instance.new("UIListLayout", container)
+    list.Padding = UDim.new(0, 6)
+    list:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        container.CanvasSize = UDim2.new(0, 0, 0, list.AbsoluteContentSize.Y + 10)
+    end)
+
+    tabBtn.MouseButton1Click:Connect(function()
+        for _, c in pairs(ContentArea:GetChildren()) do if c:IsA("ScrollingFrame") then c.Visible = false end end
+        for _, b in pairs(Sidebar:GetChildren()) do if b:IsA("TextButton") then b.TextColor3 = Color3.fromRGB(150, 150, 165) end end
+        container.Visible = true
+        tabBtn.TextColor3 = _G.CurrentAccent
+    end)
+
+    if not activeTabContainer then
+        activeTabContainer = container
+        container.Visible = true
+        tabBtn.TextColor3 = _G.CurrentAccent
+    end
+
+    return container
+end
+
+function CreateToggle(parent, title, callback)
+    local btn = Instance.new("TextButton", parent)
+    btn.Size = UDim2.new(1, -6, 0, 36)
+    btn.BackgroundColor3 = Color3.fromRGB(22, 22, 30)
+    btn.Text = "  " .. title
+    btn.TextColor3 = Color3.fromRGB(220, 220, 235)
+    btn.TextSize = 11
+    btn.Font = Enum.Font.GothamMedium
+    btn.TextXAlignment = Enum.TextXAlignment.Left
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+
+    local statusBox = Instance.new("TextLabel", btn)
+    statusBox.Size = UDim2.new(0, 42, 0, 22)
+    statusBox.Position = UDim2.new(1, -48, 0.5, -11)
+    statusBox.BackgroundColor3 = Color3.fromRGB(16, 16, 22)
+    statusBox.Text = "OFF"
+    statusBox.TextColor3 = Color3.fromRGB(130, 130, 145)
+    statusBox.TextSize = 10
+    statusBox.Font = Enum.Font.GothamBold
+    Instance.new("UICorner", statusBox).CornerRadius = UDim.new(0, 6)
+
+    local state = false
+    btn.MouseButton1Click:Connect(function()
+        state = not state
+        statusBox.Text = state and "ON" or "OFF"
+        statusBox.TextColor3 = state and Color3.new(1,1,1) or Color3.fromRGB(130, 130, 145)
+        statusBox.BackgroundColor3 = state and _G.CurrentAccent or Color3.fromRGB(16, 16, 22)
+        if state then table.insert(_G.InteractiveElements, statusBox) end
+        callback(state)
+    end)
+end
+-- =============================================
+-- Quuua-ragdoll💕 - Часть 2: Функционал и Меню
+-- =============================================
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Workspace = game:GetService("Workspace")
+
+local LocalPlayer = Players.LocalPlayer
+local Camera = Workspace.CurrentCamera
+
+-- ==================== 1. ОСНОВНОЕ ====================
+local TabMain = CreateTab("⭐ Основное")
+
+CreateToggle(TabMain, "Anti Ragdoll", function(v)
+    _G.AntiRagdoll = v
+    task.spawn(function()
+        while _G.AntiRagdoll do
+            pcall(function()
+                local char = LocalPlayer.Character
+                if char then
+                    local hum = char:FindFirstChildOfClass("Humanoid")
+                    if hum then
+                        hum.PlatformStanding = false
+                    end
+                end
+            end)
+            task.wait(0.1)
+        end
+    end)
+end)
+
+-- Fly с выбором скорости
+local FlySpeedVal = 50
+CreateToggle(TabMain, "Fly (Полет)", function(v)
+    _G.FlyActive = v
+    task.spawn(function()
+        local bg, bv
+        while _G.FlyActive do
+            pcall(function()
+                local char = LocalPlayer.Character
+                local root = char and char:FindFirstChild("HumanoidRootPart")
+                if root then
+                    if not root:FindFirstChild("QuuuaFlyBodyVelocity") then
+                        bv = Instance.new("BodyVelocity", root)
+                        bv.Name = "QuuuaFlyBodyVelocity"
+                        bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+                        bg = Instance.new("BodyGyro", root)
+                        bg.Name = "QuuuaFlyBodyGyro"
+                        bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+                    end
+                    bg.CFrame = Camera.CFrame
+                    local moveDir = Vector3.new()
+                    if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDir = moveDir + Camera.CFrame.LookVector end
+                    if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDir = moveDir - Camera.CFrame.LookVector end
+                    if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDir = moveDir - Camera.CFrame.RightVector end
+                    if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDir = moveDir + Camera.CFrame.RightVector end
+                    bv.Velocity = moveDir * FlySpeedVal
+                end
+            end)
+            task.wait()
+        end
+        local char = LocalPlayer.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            for _, c in pairs(char.HumanoidRootPart:GetChildren()) do
+                if c.Name == "QuuuaFlyBodyVelocity" or c.Name == "QuuuaFlyBodyGyro" then c:Destroy() end
+            end
+        end
+    end)
+end)
+
+local SpeedBox = Instance.new("TextButton", TabMain)
+SpeedBox.Size = UDim2.new(1, -6, 0, 36)
+SpeedBox.BackgroundColor3 = Color3.fromRGB(22, 22, 30)
+SpeedBox.Text = "  ⚡ Скорость полета: 50 (Нажми изменить)"
+SpeedBox.TextColor3 = Color3.fromRGB(220, 220, 235)
+SpeedBox.TextSize = 11
+SpeedBox.Font = Enum.Font.GothamMedium
+SpeedBox.TextXAlignment = Enum.TextXAlignment.Left
+Instance.new("UICorner", SpeedBox).CornerRadius = UDim.new(0, 8)
+
+SpeedBox.MouseButton1Click:Connect(function()
+    if FlySpeedVal == 50 then FlySpeedVal = 100 
+    elseif FlySpeedVal == 100 then FlySpeedVal = 200 
+    else FlySpeedVal = 50 end
+    SpeedBox.Text = "  ⚡ Скорость полета: " .. tostring(FlySpeedVal) .. " (Нажми изменить)"
+end)
+
+CreateToggle(TabMain, "Push Troll", function(v)
+    _G.PushTroll = v
+    task.spawn(function()
+        while _G.PushTroll do
+            pcall(function()
+                local char = LocalPlayer.Character
+                local root = char and char:FindFirstChild("HumanoidRootPart")
+                if root then
+                    for _, p in pairs(Players:GetPlayers()) do
+                        if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                            if (root.Position - p.Character.HumanoidRootPart.Position).Magnitude < 6 then
+                                p.Character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(0, 150, 0)
+                            end
+                        end
+                    end
+                end
+            end)
+            task.wait(0.2)
+        end
+    end)
+end)
+
+CreateToggle(TabMain, "Anti Push (Защита от кидка)", function(v)
+    _G.AntiPush = v
+    RunService.Stepped:Connect(function()
+        if _G.AntiPush and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            LocalPlayer.Character.HumanoidRootPart.AssemblyAngularVelocity = Vector3.new(0,0,0)
+        end
+    end)
+end)
+
+CreateToggle(TabMain, "Fling Push (Флинг при касании)", function(v)
+    _G.FlingPush = v
+    task.spawn(function()
+        while _G.FlingPush do
+            pcall(function()
+                local char = LocalPlayer.Character
+                local root = char and char:FindFirstChild("HumanoidRootPart")
+                if root then
+                    for _, p in pairs(Players:GetPlayers()) do
+                        if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                            if (root.Position - p.Character.HumanoidRootPart.Position).Magnitude < 5 then
+                                p.Character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(math.random(-500,500), 800, math.random(-500,500))
+                            end
+                        end
+                    end
+                end
+            end)
+            task.wait(0.1)
+        end
+    end)
+end)
+
+-- Скорость персонажа (WalkSpeed)
+CreateToggle(TabMain, "Speed Boost (Ускорение бега)", function(v)
+    _G.SpeedBoost = v
+    task.spawn(function()
+        while _G.SpeedBoost do
+            pcall(function()
+                local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+                if hum then hum.WalkSpeed = 32 end
+            end)
+            task.wait(0.3)
+        end
+        pcall(function()
+            local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+            if hum then hum.WalkSpeed = 16 end
+        end)
+    end)
+end)
+
+-- ==================== 2. КАСТОМИЗАЦИЯ МЕНЮ ====================
+local TabCustom = CreateTab("🎨 Кастомизация")
+
+local function AddColorBtn(name, color)
+    local btn = Instance.new("TextButton", TabCustom)
+    btn.Size = UDim2.new(1, -6, 0, 34)
+    btn.BackgroundColor3 = color
+    btn.Text = "  Цвет: " .. name
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.TextSize = 11
+    btn.Font = Enum.Font.GothamBold
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+    btn.MouseButton1Click:Connect(function()
+        _G.isRGB = false
+        UpdateThemeColor(color)
+    end)
+end
+
+AddColorBtn("Розовый (Фирменный)", Color3.fromRGB(240, 90, 140))
+AddColorBtn("Красный", Color3.fromRGB(240, 50, 50))
+AddColorBtn("Фиолетовый", Color3.fromRGB(160, 50, 240))
+AddColorBtn("Синий", Color3.fromRGB(50, 140, 240))
+AddColorBtn("Зеленый", Color3.fromRGB(50, 220, 120))
+
+CreateToggle(TabCustom, "RGB Радужный режим", function(v)
+    _G.isRGB = v
+end)
+
+-- Изменение толщины обводки
+local StrokeBtn = Instance.new("TextButton", TabCustom)
+StrokeBtn.Size = UDim2.new(1, -6, 0, 36)
+StrokeBtn.BackgroundColor3 = Color3.fromRGB(22, 22, 30)
+StrokeBtn.Text = "  ⚡ Толщина обводки: 2"
+StrokeBtn.TextColor3 = Color3.fromRGB(220, 220, 235)
+StrokeBtn.TextSize = 11
+StrokeBtn.Font = Enum.Font.GothamMedium
+StrokeBtn.TextXAlignment = Enum.TextXAlignment.Left
+Instance.new("UICorner", StrokeBtn).CornerRadius = UDim.new(0, 8)
+
+StrokeBtn.MouseButton1Click:Connect(function()
+    if _G.StrokeThicknessVal == 2 then _G.StrokeThicknessVal = 3.5
+    elseif _G.StrokeThicknessVal == 3.5 then _G.StrokeThicknessVal = 5
+    else _G.StrokeThicknessVal = 2 end
+    
+    StrokeBtn.Text = "  ⚡ Толщина обводки: " .. tostring(_G.StrokeThicknessVal)
+    for _, el in ipairs(_G.InteractiveElements) do
+        if el and el:IsA("UIStroke") then
+            el.Thickness = _G.StrokeThicknessVal
+        end
+    end
+end)
+
+-- ==================== 3. РАСТЯГ ЭКРАНА ====================
+local TabStretch = CreateTab("📐 Растяг")
+
+local StretchBtn = Instance.new("TextButton", TabStretch)
+StretchBtn.Size = UDim2.new(1, -6, 0, 36)
+StretchBtn.BackgroundColor3 = Color3.fromRGB(22, 22, 30)
+StretchBtn.Text = "  ⚡ Включить / Выключить растяг экрана"
+StretchBtn.TextColor3 = Color3.fromRGB(220, 220, 235)
+StretchBtn.TextSize = 11
+StretchBtn.Font = Enum.Font.GothamMedium
+Instance.new("UICorner", StretchBtn).CornerRadius = UDim.new(0, 8)
+
+local stretchState = false
+StretchBtn.MouseButton1Click:Connect(function()
+    stretchState = not stretchState
+    if stretchState then
+        Camera.FieldOfView = 95
+        StretchBtn.BackgroundColor3 = _G.CurrentAccent
+        StretchBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    else
+        Camera.FieldOfView = 70
+        StretchBtn.BackgroundColor3 = Color3.fromRGB(22, 22, 30)
+        StretchBtn.TextColor3 = Color3.fromRGB(220, 220, 235)
+    end
+end)
+
+-- ==================== 4. СОЦСЕТИ ====================
+local TabSocial = CreateTab("📱 Соцсети")
+
+local SocialBox = Instance.new("TextButton", TabSocial)
+SocialBox.Size = UDim2.new(1, -6, 0, 42)
+SocialBox.BackgroundColor3 = Color3.fromRGB(22, 22, 30)
+SocialBox.Text = "  Tiktok: @symashedshi73\n  (Нажми, чтобы скопировать)"
+SocialBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+SocialBox.TextSize = 11
+SocialBox.Font = Enum.Font.GothamBold
+SocialBox.TextXAlignment = Enum.TextXAlignment.Left
+Instance.new("UICorner", SocialBox).CornerRadius = UDim.new(0, 8)
+
+SocialBox.MouseButton1Click:Connect(function()
+    pcall(function()
+        setclipboard("@symashedshi73")
+        SocialBox.Text = "  ✅ Успешно скопировано в буфер!"
+        task.wait(2)
+        SocialBox.Text = "  Tiktok: @symashedshi73\n  (Нажми, чтобы скопировать)"
+    end)
+end)
