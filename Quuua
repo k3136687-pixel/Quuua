@@ -13,7 +13,7 @@ ScreenGui.Name = "QuuuaHub"
 ScreenGui.Parent = CoreGui
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
--- Главное окно (по центру)
+-- Главное окно
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Parent = ScreenGui
@@ -53,7 +53,7 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
--- Растягивание окна (Ресайз)
+-- Ресайз окна
 local Resizer = Instance.new("TextButton")
 Resizer.Parent = MainFrame
 Resizer.BackgroundColor3 = Color3.fromRGB(0, 255, 128)
@@ -82,7 +82,7 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
--- Маленькая плашка сворачивания (теперь тоже ПЕРЕДВИГАЕТСЯ!)
+-- Мини-плашка сворачивания
 local MiniButton = Instance.new("TextButton")
 MiniButton.Name = "MiniButton"
 MiniButton.Parent = ScreenGui
@@ -98,7 +98,6 @@ MiniButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 MiniButton.TextSize = 11
 MiniButton.Active = true
 
--- Логика перетаскивания мини-плашки и её клика для открытия
 local miniDragging, miniDragInput, miniDragStart, miniStartPos
 local isDraggingMini = false
 
@@ -190,7 +189,7 @@ MinimizeBtn.Text = "-"
 MinimizeBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
 MinimizeBtn.TextSize = 16
 
--- Навигация и языки
+-- Навигация
 local NavFrame = Instance.new("Frame")
 NavFrame.Parent = MainFrame
 NavFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
@@ -258,7 +257,7 @@ ContainerMain.Parent = MainFrame
 ContainerMain.BackgroundTransparency = 1
 ContainerMain.Position = UDim2.new(0, 5, 0, 110)
 ContainerMain.Size = UDim2.new(1, -10, 1, -140)
-ContainerMain.CanvasSize = UDim2.new(0, 0, 0, 1200)
+ContainerMain.CanvasSize = UDim2.new(0, 0, 0, 1400)
 ContainerMain.ScrollBarThickness = 4
 
 local ContainerCustom = Instance.new("ScrollingFrame")
@@ -313,10 +312,13 @@ end)
 CloseBtn.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
 MinimizeBtn.MouseButton1Click:Connect(function() MainFrame.Visible = false; MiniButton.Visible = true end)
 -- Quuua-Hub v1.0 (Part 2: All 16 Features, Sliders & Fixed Fly)
-local Workspace = game:GetService("Workspace")
 local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
 local Lighting = game:GetService("Lighting")
 local VirtualUser = game:GetService("VirtualUser")
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
 
 local yOffset = 5
 local function createToggle(parent, name, callback)
@@ -444,8 +446,9 @@ local infJumpConn
 createToggle(ContainerMain, "Infinite Jump", function(state)
     if state then
         infJumpConn = UserInputService.JumpRequest:Connect(function()
-            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-                LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
+            local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+            if hum then
+                hum:ChangeState(Enum.HumanoidStateType.Jumping)
             end
         end)
     else
@@ -453,7 +456,7 @@ createToggle(ContainerMain, "Infinite Jump", function(state)
     end
 end)
 
--- 4. Fullbright (+ слайдер яркости)
+-- 4. Fullbright
 createToggle(ContainerMain, "Fullbright", function(state)
     Lighting.Brightness = state and 2 or 1
     Lighting.GlobalShadows = not state
@@ -472,13 +475,49 @@ createToggle(ContainerMain, "Personal Teleport", function(state)
     end
 end)
 
--- 6. Player List
-createToggle(ContainerMain, "Player List (Print)", function(state)
-    if state then
-        for _, p in pairs(Players:GetPlayers()) do
-            if p ~= LocalPlayer and p.Character and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                local dist = (LocalPlayer.Character.HumanoidRootPart.Position - p.Character.HumanoidRootPart.Position).Magnitude
-                print("Player: " .. p.Name .. " | Dist: " .. math.floor(dist))
+-- 6. Player List GUI
+local playerListFrame = Instance.new("ScrollingFrame")
+playerListFrame.Parent = ScreenGui
+playerListFrame.BackgroundTransparency = 0.3
+playerListFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+playerListFrame.BorderColor3 = Color3.fromRGB(0, 255, 128)
+playerListFrame.Position = UDim2.new(1, -180, 0.4, 0)
+playerListFrame.Size = UDim2.new(0, 170, 0, 200)
+playerListFrame.CanvasSize = UDim2.new(0, 0, 0, 500)
+playerListFrame.Visible = false
+playerListFrame.ScrollBarThickness = 3
+
+createToggle(ContainerMain, "Player List GUI", function(state)
+    playerListFrame.Visible = state
+end)
+
+task.spawn(function()
+    while true do
+        task.wait(1)
+        if playerListFrame.Visible then
+            for _, child in ipairs(playerListFrame:GetChildren()) do
+                if child:IsA("TextLabel") then child:Destroy() end
+            end
+            local yPos = 2
+            for _, p in pairs(Players:GetPlayers()) do
+                if p ~= LocalPlayer then
+                    local distTxt = "Далеко"
+                    if p.Character and p.Character:FindFirstChild("HumanoidRootPart") and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                        local dist = (LocalPlayer.Character.HumanoidRootPart.Position - p.Character.HumanoidRootPart.Position).Magnitude
+                        distTxt = math.floor(dist) .. "m"
+                    end
+                    local lbl = Instance.new("TextLabel")
+                    lbl.Parent = playerListFrame
+                    lbl.BackgroundTransparency = 1
+                    lbl.Position = UDim2.new(0, 5, 0, yPos)
+                    lbl.Size = UDim2.new(1, -10, 0, 20)
+                    lbl.Font = Enum.Font.SourceSansBold
+                    lbl.Text = p.Name .. " [" .. distTxt .. "]"
+                    lbl.TextColor3 = Color3.fromRGB(0, 255, 128)
+                    lbl.TextSize = 12
+                    lbl.TextXAlignment = Enum.TextXAlignment.Left
+                    yPos = yPos + 22
+                end
             end
         end
     end
@@ -503,7 +542,7 @@ RunService.RenderStepped:Connect(function(dt)
 end)
 createToggle(ContainerMain, "FPS & Ping Counter", function(state) fpsLabel.Visible = state end)
 
--- 8. Speed (+ слайдер)
+-- 8. Speed
 local currentSpeed = 16
 createToggle(ContainerMain, "Speed Boost", function(state)
     task.spawn(function()
@@ -519,9 +558,10 @@ createToggle(ContainerMain, "Speed Boost", function(state)
 end)
 createSlider(ContainerMain, "Speed Value", 16, 150, 32, function(val) currentSpeed = val end)
 
--- 9. Fly (+ управляемый слайдер скорости)
+-- 9. Fly
 local flying = false
 local flySpeed = 50
+local flyHeightOffset = 0
 local bv, bg, flyConn
 createToggle(ContainerMain, "Fly", function(state)
     flying = state
@@ -542,7 +582,7 @@ createToggle(ContainerMain, "Fly", function(state)
             if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDir = moveDir - cam.CFrame.RightVector end
             if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDir = moveDir + cam.CFrame.RightVector end
             
-            bv.Velocity = moveDir * flySpeed
+            bv.Velocity = (moveDir * flySpeed) + Vector3.new(0, flyHeightOffset, 0)
             bg.CFrame = cam.CFrame
         end)
     else
@@ -552,6 +592,7 @@ createToggle(ContainerMain, "Fly", function(state)
     end
 end)
 createSlider(ContainerMain, "Fly Speed", 20, 200, 50, function(val) flySpeed = val end)
+createSlider(ContainerMain, "Fly Up/Down Offset", -50, 50, 0, function(val) flyHeightOffset = val end)
 
 -- 10. Anti-AFK
 local afkConn
@@ -567,7 +608,7 @@ createToggle(ContainerMain, "Anti-AFK", function(state)
     end
 end)
 
--- 11. Spin (+ слайдер скорости)
+-- 11. Spinbot
 local spinning = false
 local spinSpeed = 25
 createToggle(ContainerMain, "Spinbot", function(state)
@@ -581,14 +622,20 @@ createToggle(ContainerMain, "Spinbot", function(state)
 end)
 createSlider(ContainerMain, "Spin Speed", 5, 100, 25, function(val) spinSpeed = val end)
 
--- 12. Bunny Hop (B-Hop)
+-- 12. Bunny Hop
 local bhopConn
 createToggle(ContainerMain, "Bunny Hop", function(state)
     if state then
         bhopConn = RunService.Heartbeat:Connect(function()
-            local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-            if hum and hum.MoveDirection.Magnitude > 0 then
-                hum:ChangeState(Enum.HumanoidStateType.Jumping)
+            local char = LocalPlayer.Character
+            if char then
+                local hum = char:FindFirstChildOfClass("Humanoid")
+                local root = char:FindFirstChild("HumanoidRootPart")
+                if hum and root and hum.MoveDirection.Magnitude > 0 then
+                    if hum.FloorMaterial ~= Enum.Material.Air then
+                        hum:ChangeState(Enum.HumanoidStateType.Jumping)
+                    end
+                end
             end
         end)
     else
@@ -612,7 +659,7 @@ createToggle(ContainerMain, "Noclip", function(state)
     end
 end)
 
--- 14. High Jump (+ слайдер высоты)
+-- 14. High Jump
 local jumpPowerVal = 120
 createToggle(ContainerMain, "High Jump", function(state)
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
@@ -641,7 +688,7 @@ end)
 
 ContainerMain.CanvasSize = UDim2.new(0, 0, 0, yOffset + 20)
 
--- Кастомизация (Радужный цвет неба)
+-- Кастомизация (Радужное небо)
 local skyRunning = false
 createToggle(ContainerCustom, "Rainbow Sky Mode", function(state)
     skyRunning = state
