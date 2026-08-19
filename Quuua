@@ -1,4 +1,4 @@
--- Quuua-Hub v1.0 (Part 1: UI, Resizing & Languages)
+-- Quuua-Hub v1.0 (Part 1: UI, Movable Mini-Button, Sliders & Languages)
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
@@ -22,10 +22,10 @@ MainFrame.BackgroundTransparency = 0
 MainFrame.BorderColor3 = Color3.fromRGB(0, 255, 128)
 MainFrame.BorderSizePixel = 2
 MainFrame.Position = UDim2.new(0.5, -150, 0.5, -200)
-MainFrame.Size = UDim2.new(0, 300, 0, 400)
+MainFrame.Size = UDim2.new(0, 300, 0, 420)
 MainFrame.Active = true
 
--- Перетаскивание окна
+-- Перетаскивание главного окна
 local dragging, dragInput, dragStart, startPos
 MainFrame.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -53,7 +53,7 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
--- Растягивание и стягивание окна (Ресайз)
+-- Растягивание окна (Ресайз)
 local Resizer = Instance.new("TextButton")
 Resizer.Parent = MainFrame
 Resizer.BackgroundColor3 = Color3.fromRGB(0, 255, 128)
@@ -68,23 +68,21 @@ Resizer.InputBegan:Connect(function(input)
         resizing = true
     end
 end)
-
 UserInputService.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         resizing = false
     end
 end)
-
 UserInputService.InputChanged:Connect(function(input)
     if resizing and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
         local mousePos = input.Position
-        local newSizeX = math.clamp(mousePos.X - MainFrame.AbsolutePosition.X, 250, 600)
-        local newSizeY = math.clamp(mousePos.Y - MainFrame.AbsolutePosition.Y, 300, 700)
+        local newSizeX = math.clamp(mousePos.X - MainFrame.AbsolutePosition.X, 260, 600)
+        local newSizeY = math.clamp(mousePos.Y - MainFrame.AbsolutePosition.Y, 320, 750)
         MainFrame.Size = UDim2.new(0, newSizeX, 0, newSizeY)
     end
 end)
 
--- Маленькая плашка сворачивания слева
+-- Маленькая плашка сворачивания (теперь тоже ПЕРЕДВИГАЕТСЯ!)
 local MiniButton = Instance.new("TextButton")
 MiniButton.Name = "MiniButton"
 MiniButton.Parent = ScreenGui
@@ -92,14 +90,56 @@ MiniButton.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 MiniButton.BorderColor3 = Color3.fromRGB(0, 255, 128)
 MiniButton.BorderSizePixel = 1
 MiniButton.Position = UDim2.new(0, 10, 0.5, -25)
-MiniButton.Size = UDim2.new(0, 100, 0, 45)
+MiniButton.Size = UDim2.new(0, 110, 0, 45)
 MiniButton.Visible = false
 MiniButton.Font = Enum.Font.SourceSansBold
 MiniButton.Text = "Quuua\n@symashedshi73"
 MiniButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 MiniButton.TextSize = 11
+MiniButton.Active = true
 
--- Верхняя шапка
+-- Логика перетаскивания мини-плашки и её клика для открытия
+local miniDragging, miniDragInput, miniDragStart, miniStartPos
+local isDraggingMini = false
+
+MiniButton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        miniDragging = true
+        isDraggingMini = false
+        miniDragStart = input.Position
+        miniStartPos = MiniButton.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                miniDragging = false
+            end
+        end)
+    end
+end)
+
+MiniButton.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        miniDragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == miniDragInput and miniDragging then
+        local delta = input.Position - miniDragStart
+        if delta.Magnitude > 5 then
+            isDraggingMini = true
+            MiniButton.Position = UDim2.new(miniStartPos.X.Scale, miniStartPos.X.Offset + delta.X, miniStartPos.Y.Scale, miniStartPos.Y.Offset + delta.Y)
+        end
+    end
+end)
+
+MiniButton.MouseButton1Click:Connect(function()
+    if not isDraggingMini then
+        MiniButton.Visible = false
+        MainFrame.Visible = true
+    end
+end)
+
+-- Шапка
 local TopBar = Instance.new("Frame")
 TopBar.Parent = MainFrame
 TopBar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
@@ -128,7 +168,6 @@ SubTitle.TextColor3 = Color3.fromRGB(180, 180, 180)
 SubTitle.TextSize = 11
 SubTitle.TextXAlignment = Enum.TextXAlignment.Left
 
--- Кнопка закрытия (X)
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.Parent = TopBar
 CloseBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
@@ -140,7 +179,6 @@ CloseBtn.Text = "X"
 CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 CloseBtn.TextSize = 14
 
--- Кнопка сворачивания (-)
 local MinimizeBtn = Instance.new("TextButton")
 MinimizeBtn.Parent = TopBar
 MinimizeBtn.BackgroundColor3 = Color3.fromRGB(240, 240, 240)
@@ -152,7 +190,7 @@ MinimizeBtn.Text = "-"
 MinimizeBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
 MinimizeBtn.TextSize = 16
 
--- Навигация и переключатели языков (Флаги)
+-- Навигация и языки
 local NavFrame = Instance.new("Frame")
 NavFrame.Parent = MainFrame
 NavFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
@@ -214,13 +252,13 @@ LangUA.Size = UDim2.new(0, 45, 0, 24)
 LangUA.Text = "🇺🇦"
 LangUA.TextSize = 16
 
--- Контейнеры вкладок
+-- Контейнеры
 local ContainerMain = Instance.new("ScrollingFrame")
 ContainerMain.Parent = MainFrame
 ContainerMain.BackgroundTransparency = 1
 ContainerMain.Position = UDim2.new(0, 5, 0, 110)
 ContainerMain.Size = UDim2.new(1, -10, 1, -140)
-ContainerMain.CanvasSize = UDim2.new(0, 0, 0, 850)
+ContainerMain.CanvasSize = UDim2.new(0, 0, 0, 1200)
 ContainerMain.ScrollBarThickness = 4
 
 local ContainerCustom = Instance.new("ScrollingFrame")
@@ -242,13 +280,11 @@ Footer.Text = "*Демо версия 1.0*"
 Footer.TextColor3 = Color3.fromRGB(150, 150, 150)
 Footer.TextSize = 11
 
--- Перевод текста интерфейса
 local L = {
     ru = {main = "Основное", custom = "Кастомизация", lang = "Язык"},
     en = {main = "Main", custom = "Customization", lang = "Language"},
     ua = {main = "Основне", custom = "Кастомізація", lang = "Мова"}
 }
-
 local function setLang(langKey)
     TabMain.Text = L[langKey].main
     TabCustom.Text = L[langKey].custom
@@ -276,8 +312,7 @@ end)
 
 CloseBtn.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
 MinimizeBtn.MouseButton1Click:Connect(function() MainFrame.Visible = false; MiniButton.Visible = true end)
-MiniButton.MouseButton1Click:Connect(function() MiniButton.Visible = false; MainFrame.Visible = true end)
--- Quuua-Hub v1.0 (Part 2: 15 Core Features & Custom Sky)
+-- Quuua-Hub v1.0 (Part 2: All 16 Features, Sliders & Fixed Fly)
 local Workspace = game:GetService("Workspace")
 local RunService = game:GetService("RunService")
 local Lighting = game:GetService("Lighting")
@@ -313,7 +348,63 @@ local function createToggle(parent, name, callback)
         end
         callback(active)
     end)
-    yOffset = yOffset + 42
+    yOffset = yOffset + 40
+end
+
+local function createSlider(parent, name, min, max, default, callback)
+    local frame = Instance.new("Frame")
+    frame.Parent = parent
+    frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    frame.BorderColor3 = Color3.fromRGB(50, 50, 50)
+    frame.Position = UDim2.new(0, 5, 0, yOffset)
+    frame.Size = UDim2.new(1, -10, 0, 45)
+    
+    local label = Instance.new("TextLabel")
+    label.Parent = frame
+    label.BackgroundTransparency = 1
+    label.Position = UDim2.new(0, 5, 0, 2)
+    label.Size = UDim2.new(1, -10, 0, 20)
+    label.Font = Enum.Font.SourceSansBold
+    label.Text = name .. ": " .. default
+    label.TextColor3 = Color3.fromRGB(220, 220, 220)
+    label.TextSize = 13
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    
+    local sliderBg = Instance.new("TextButton")
+    sliderBg.Parent = frame
+    sliderBg.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    sliderBg.BorderSizePixel = 0
+    sliderBg.Position = UDim2.new(0, 5, 0, 25)
+    sliderBg.Size = UDim2.new(1, -10, 0, 12)
+    sliderBg.Text = ""
+    
+    local sliderFill = Instance.new("Frame")
+    sliderFill.Parent = sliderBg
+    sliderFill.BackgroundColor3 = Color3.fromRGB(0, 255, 128)
+    sliderFill.BorderSizePixel = 0
+    sliderFill.Size = UDim2.new((default - min)/(max - min), 0, 1, 0)
+    
+    local draggingSlider = false
+    sliderBg.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            draggingSlider = true
+        end
+    end)
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            draggingSlider = false
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if draggingSlider and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local pos = math.clamp((input.Position.X - sliderBg.AbsolutePosition.X) / sliderBg.AbsoluteSize.X, 0, 1)
+            sliderFill.Size = UDim2.new(pos, 0, 1, 0)
+            local val = math.floor(min + (max - min) * pos)
+            label.Text = name .. ": " .. val
+            callback(val)
+        end
+    end)
+    yOffset = yOffset + 50
 end
 
 -- 1. ESP Box
@@ -328,15 +419,13 @@ createToggle(ContainerMain, "ESP Box", function(state)
                     hl.OutlineColor = Color3.fromRGB(255, 255, 255)
                 end
             else
-                if p.Character:FindFirstChild("ESPHighlight") then
-                    p.Character.ESPHighlight:Destroy()
-                end
+                if p.Character:FindFirstChild("ESPHighlight") then p.Character.ESPHighlight:Destroy() end
             end
         end
     end
 end)
 
--- 2. Авто-кликер
+-- 2. Auto-Clicker
 local autoClicking = false
 task.spawn(function()
     while true do
@@ -364,18 +453,16 @@ createToggle(ContainerMain, "Infinite Jump", function(state)
     end
 end)
 
--- 4. Fullbright
+-- 4. Fullbright (+ слайдер яркости)
 createToggle(ContainerMain, "Fullbright", function(state)
-    if state then
-        Lighting.Brightness = 2
-        Lighting.GlobalShadows = false
-    else
-        Lighting.Brightness = 1
-        Lighting.GlobalShadows = true
-    end
+    Lighting.Brightness = state and 2 or 1
+    Lighting.GlobalShadows = not state
+end)
+createSlider(ContainerMain, "Fullbright Brightness", 1, 10, 2, function(val)
+    Lighting.Brightness = val
 end)
 
--- 5. Персональный телепорт
+-- 5. Personal Teleport
 local savedPos = nil
 createToggle(ContainerMain, "Personal Teleport", function(state)
     if state and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
@@ -385,7 +472,7 @@ createToggle(ContainerMain, "Personal Teleport", function(state)
     end
 end)
 
--- 6. Список игроков
+-- 6. Player List
 createToggle(ContainerMain, "Player List (Print)", function(state)
     if state then
         for _, p in pairs(Players:GetPlayers()) do
@@ -397,7 +484,7 @@ createToggle(ContainerMain, "Player List (Print)", function(state)
     end
 end)
 
--- 7. Счетчик FPS и Ping
+-- 7. FPS & Ping Counter
 local fpsLabel = Instance.new("TextLabel")
 fpsLabel.Parent = ScreenGui
 fpsLabel.BackgroundTransparency = 0.5
@@ -416,12 +503,13 @@ RunService.RenderStepped:Connect(function(dt)
 end)
 createToggle(ContainerMain, "FPS & Ping Counter", function(state) fpsLabel.Visible = state end)
 
--- 8. Speed
+-- 8. Speed (+ слайдер)
+local currentSpeed = 16
 createToggle(ContainerMain, "Speed Boost", function(state)
     task.spawn(function()
         while state and task.wait(0.2) do
             if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-                LocalPlayer.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = 32
+                LocalPlayer.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = currentSpeed
             end
         end
         if not state and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
@@ -429,33 +517,43 @@ createToggle(ContainerMain, "Speed Boost", function(state)
         end
     end)
 end)
+createSlider(ContainerMain, "Speed Value", 16, 150, 32, function(val) currentSpeed = val end)
 
--- 9. Fly
+-- 9. Fly (+ управляемый слайдер скорости)
 local flying = false
-local bv, bg
+local flySpeed = 50
+local bv, bg, flyConn
 createToggle(ContainerMain, "Fly", function(state)
     flying = state
     local char = LocalPlayer.Character
     if not char or not char:FindFirstChild("HumanoidRootPart") then return end
     if flying then
-        bv = Instance.new("BodyVelocity", char.HumanoidRootPart)
+        local rootPart = char.HumanoidRootPart
+        bv = Instance.new("BodyVelocity", rootPart)
         bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-        bg = Instance.new("BodyGyro", char.HumanoidRootPart)
+        bg = Instance.new("BodyGyro", rootPart)
         bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-        task.spawn(function()
-            while flying and char:FindFirstChild("HumanoidRootPart") do
-                bv.Velocity = Workspace.CurrentCamera.CFrame.LookVector * 50
-                bg.CFrame = Workspace.CurrentCamera.CFrame
-                task.wait()
-            end
+        
+        flyConn = RunService.RenderStepped:Connect(function()
+            local cam = Workspace.CurrentCamera
+            local moveDir = Vector3.new(0,0,0)
+            if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDir = moveDir + cam.CFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDir = moveDir - cam.CFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDir = moveDir - cam.CFrame.RightVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDir = moveDir + cam.CFrame.RightVector end
+            
+            bv.Velocity = moveDir * flySpeed
+            bg.CFrame = cam.CFrame
         end)
     else
+        if flyConn then flyConn:Disconnect() end
         if bv then bv:Destroy() end
         if bg then bg:Destroy() end
     end
 end)
+createSlider(ContainerMain, "Fly Speed", 20, 200, 50, function(val) flySpeed = val end)
 
--- 10. Анти-АФК
+-- 10. Anti-AFK
 local afkConn
 createToggle(ContainerMain, "Anti-AFK", function(state)
     if state then
@@ -469,19 +567,21 @@ createToggle(ContainerMain, "Anti-AFK", function(state)
     end
 end)
 
--- 11. Spin
+-- 11. Spin (+ слайдер скорости)
 local spinning = false
+local spinSpeed = 25
 createToggle(ContainerMain, "Spinbot", function(state)
     spinning = state
     task.spawn(function()
         while spinning and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") do
-            LocalPlayer.Character.HumanoidRootPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.Angles(0, math.rad(25), 0)
+            LocalPlayer.Character.HumanoidRootPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.Angles(0, math.rad(spinSpeed), 0)
             task.wait()
         end
     end)
 end)
+createSlider(ContainerMain, "Spin Speed", 5, 100, 25, function(val) spinSpeed = val end)
 
--- 12. Bunny Hop
+-- 12. Bunny Hop (B-Hop)
 local bhopConn
 createToggle(ContainerMain, "Bunny Hop", function(state)
     if state then
@@ -512,10 +612,17 @@ createToggle(ContainerMain, "Noclip", function(state)
     end
 end)
 
--- 14. High Jump
+-- 14. High Jump (+ слайдер высоты)
+local jumpPowerVal = 120
 createToggle(ContainerMain, "High Jump", function(state)
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-        LocalPlayer.Character:FindFirstChildOfClass("Humanoid").JumpPower = state and 120 or 50
+        LocalPlayer.Character:FindFirstChildOfClass("Humanoid").JumpPower = state and jumpPowerVal or 50
+    end
+end)
+createSlider(ContainerMain, "Jump Power", 50, 300, 120, function(val)
+    jumpPowerVal = val
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+        LocalPlayer.Character:FindFirstChildOfClass("Humanoid").JumpPower = val
     end
 end)
 
@@ -532,9 +639,9 @@ createToggle(ContainerMain, "Anti-Sit", function(state)
     end
 end)
 
-ContainerMain.CanvasSize = UDim2.new(0, 0, 0, yOffset + 10)
+ContainerMain.CanvasSize = UDim2.new(0, 0, 0, yOffset + 20)
 
--- Кастомизация (Цвет неба / Радуга)
+-- Кастомизация (Радужный цвет неба)
 local skyRunning = false
 createToggle(ContainerCustom, "Rainbow Sky Mode", function(state)
     skyRunning = state
