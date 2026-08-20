@@ -310,8 +310,7 @@ TabCustom.MouseButton1Click:Connect(function()
 end)
 
 CloseBtn.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
-MinimizeBtn.MouseButton1Click:Connect(function() MainFrame.Visible = false; MiniButton.Visible = true end)
--- Quuua-Hub v1.0 (Part 2: All 16 Features, Sliders & Fixed Fly)
+Minim-- Quuua-Hub v1.0 (Part 2: Features, Mobile Fly GUI & Fixes)
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 local Lighting = game:GetService("Lighting")
@@ -441,14 +440,17 @@ task.spawn(function()
 end)
 createToggle(ContainerMain, "Auto-Clicker", function(state) autoClicking = state end)
 
--- 3. Infinite Jump
+-- 3. Infinite Jump (Исправлен)
 local infJumpConn
 createToggle(ContainerMain, "Infinite Jump", function(state)
     if state then
         infJumpConn = UserInputService.JumpRequest:Connect(function()
-            local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-            if hum then
-                hum:ChangeState(Enum.HumanoidStateType.Jumping)
+            local char = LocalPlayer.Character
+            if char then
+                local hum = char:FindFirstChildOfClass("Humanoid")
+                if hum then
+                    hum:ChangeState(Enum.HumanoidStateType.Jumping)
+                end
             end
         end)
     else
@@ -465,13 +467,15 @@ createSlider(ContainerMain, "Fullbright Brightness", 1, 10, 2, function(val)
     Lighting.Brightness = val
 end)
 
--- 5. Personal Teleport
+-- 5. Personal Teleport (Нормальная телепортация)
 local savedPos = nil
 createToggle(ContainerMain, "Personal Teleport", function(state)
-    if state and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        savedPos = LocalPlayer.Character.HumanoidRootPart.CFrame
-    elseif not state and savedPos and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        LocalPlayer.Character.HumanoidRootPart.CFrame = savedPos
+    local char = LocalPlayer.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    if state and root then
+        savedPos = root.CFrame
+    elseif not state and savedPos and root then
+        root.CFrame = savedPos
     end
 end)
 
@@ -558,15 +562,92 @@ createToggle(ContainerMain, "Speed Boost", function(state)
 end)
 createSlider(ContainerMain, "Speed Value", 16, 150, 32, function(val) currentSpeed = val end)
 
--- 9. Fly
+-- 9. Fly (С отдельной плавающей мобильной иконкой Fly GUI)
 local flying = false
 local flySpeed = 50
-local flyHeightOffset = 0
+local flyVertical = 0
 local bv, bg, flyConn
+
+local FlyGui = Instance.new("ScreenGui")
+FlyGui.Name = "FlyGuiPanel"
+FlyGui.Parent = CoreGui
+FlyGui.Enabled = false
+
+local FlyFrame = Instance.new("Frame")
+FlyFrame.Parent = FlyGui
+FlyFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+FlyFrame.BorderColor3 = Color3.fromRGB(120, 0, 255)
+FlyFrame.Position = UDim2.new(0, 30, 0, 150)
+FlyFrame.Size = UDim2.new(0, 180, 0, 90)
+FlyFrame.Active = true
+FlyFrame.Draggable = true
+
+local BtnUp = Instance.new("TextButton")
+BtnUp.Parent = FlyFrame
+BtnUp.BackgroundColor3 = Color3.fromRGB(50, 150, 50)
+BtnUp.Position = UDim2.new(0, 5, 0, 5)
+BtnUp.Size = UDim2.new(0, 50, 0, 35)
+BtnUp.Text = "UP"
+BtnUp.TextColor3 = Color3.fromRGB(255, 255, 255)
+BtnUp.Font = Enum.Font.SourceSansBold
+
+local BtnDown = Instance.new("TextButton")
+BtnDown.Parent = FlyFrame
+BtnDown.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
+BtnDown.Position = UDim2.new(0, 5, 0, 45)
+BtnDown.Size = UDim2.new(0, 50, 0, 35)
+BtnDown.Text = "DOWN"
+BtnDown.TextColor3 = Color3.fromRGB(255, 255, 255)
+BtnDown.Font = Enum.Font.SourceSansBold
+
+local BtnSpeedPlus = Instance.new("TextButton")
+BtnSpeedPlus.Parent = FlyFrame
+BtnSpeedPlus.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+BtnSpeedPlus.Position = UDim2.new(0, 60, 0, 5)
+BtnSpeedPlus.Size = UDim2.new(0, 35, 0, 35)
+BtnSpeedPlus.Text = "+"
+BtnSpeedPlus.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+local BtnSpeedMinus = Instance.new("TextButton")
+BtnSpeedMinus.Parent = FlyFrame
+BtnSpeedMinus.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+BtnSpeedMinus.Position = UDim2.new(0, 60, 0, 45)
+BtnSpeedMinus.Size = UDim2.new(0, 35, 0, 35)
+BtnSpeedMinus.Text = "-"
+BtnSpeedMinus.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+local LblFlyInfo = Instance.new("TextButton")
+LblFlyInfo.Parent = FlyFrame
+LblFlyInfo.BackgroundColor3 = Color3.fromRGB(255, 0, 128)
+LblFlyInfo.Position = UDim2.new(0, 100, 0, 5)
+LblFlyInfo.Size = UDim2.new(0, 75, 0, 35)
+LblFlyInfo.Text = "FLY V3"
+LblFlyInfo.TextColor3 = Color3.fromRGB(255, 255, 255)
+LblFlyInfo.Font = Enum.Font.SourceSansBold
+
+local BtnCloseFly = Instance.new("TextButton")
+BtnCloseFly.Parent = FlyFrame
+BtnCloseFly.BackgroundColor3 = Color3.fromRGB(255, 220, 0)
+BtnCloseFly.Position = UDim2.new(0, 100, 0, 45)
+BtnCloseFly.Size = UDim2.new(0, 75, 0, 35)
+BtnCloseFly.Text = "off"
+BtnCloseFly.TextColor3 = Color3.fromRGB(0, 0, 0)
+BtnCloseFly.Font = Enum.Font.SourceSansBold
+
+BtnUp.MouseButton1Down:Connect(function() flyVertical = 50 end)
+BtnUp.MouseButton1Up:Connect(function() flyVertical = 0 end)
+BtnDown.MouseButton1Down:Connect(function() flyVertical = -50 end)
+BtnDown.MouseButton1Up:Connect(function() flyVertical = 0 end)
+
+BtnSpeedPlus.MouseButton1Click:Connect(function() flySpeed = flySpeed + 10 LblFlyInfo.Text = "Spd:"..flySpeed end)
+BtnSpeedMinus.MouseButton1Click:Connect(function() flySpeed = math.clamp(flySpeed - 10, 10, 300) LblFlyInfo.Text = "Spd:"..flySpeed end)
+
 createToggle(ContainerMain, "Fly", function(state)
     flying = state
+    FlyGui.Enabled = state
     local char = LocalPlayer.Character
     if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+    
     if flying then
         local rootPart = char.HumanoidRootPart
         bv = Instance.new("BodyVelocity", rootPart)
@@ -582,7 +663,7 @@ createToggle(ContainerMain, "Fly", function(state)
             if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDir = moveDir - cam.CFrame.RightVector end
             if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDir = moveDir + cam.CFrame.RightVector end
             
-            bv.Velocity = (moveDir * flySpeed) + Vector3.new(0, flyHeightOffset, 0)
+            bv.Velocity = (moveDir * flySpeed) + Vector3.new(0, flyVertical, 0)
             bg.CFrame = cam.CFrame
         end)
     else
@@ -591,8 +672,16 @@ createToggle(ContainerMain, "Fly", function(state)
         if bg then bg:Destroy() end
     end
 end)
+
+BtnCloseFly.MouseButton1Click:Connect(function()
+    flying = false
+    FlyGui.Enabled = false
+    if flyConn then flyConn:Disconnect() end
+    if bv then bv:Destroy() end
+    if bg then bg:Destroy() end
+end)
+
 createSlider(ContainerMain, "Fly Speed", 20, 200, 50, function(val) flySpeed = val end)
-createSlider(ContainerMain, "Fly Up/Down Offset", -50, 50, 0, function(val) flyHeightOffset = val end)
 
 -- 10. Anti-AFK
 local afkConn
@@ -703,3 +792,4 @@ createToggle(ContainerCustom, "Rainbow Sky Mode", function(state)
     end)
 end)
 ContainerCustom.CanvasSize = UDim2.new(0, 0, 0, 60)
+izeBtn.MouseButton1Click:Connect(function() MainFrame.Visible = false; MiniButton.Visible = true end)
