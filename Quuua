@@ -1,4 +1,4 @@
--- Vip Script [Tiktok@symashedshi73] - Full Script (Fixed Fly)
+-- Vip Script [Tiktok@symashedshi73] - Full Script (Mobile JoyStick Fly)
 task.spawn(function()
     local CoreGui = game:GetService("CoreGui")
     local Players = game:GetService("Players")
@@ -231,7 +231,8 @@ task.spawn(function()
         sliderCorner.CornerRadius = UDim.new(0, 4)
         sliderCorner.Parent = sliderBg
         
-        local sliderFill = Instance.new("Frame")
+        val_fill = Instance.new("Frame")
+        local sliderFill = val_fill
         sliderFill.Parent = sliderBg
         sliderFill.BackgroundColor3 = Color3.fromRGB(210, 100, 255)
         sliderFill.BorderSizePixel = 0
@@ -284,32 +285,12 @@ task.spawn(function()
         end
     end)
 
-    -- 2. CONTROLLED FLY (Полет с остановкой на месте)
+    -- 2. MOBILE JOYSTICK FLY (Идеально под мобильный джойстик)
     local flying = false
     local flySpeed = 50
     local bv, bg, flyConn
-    local keys = {W = false, S = false, A = false, D = false, Space = false, Shift = false}
 
-    UserInputService.InputBegan:Connect(function(input, gameProcessed)
-        if gameProcessed then return end
-        if input.KeyCode == Enum.KeyCode.W then keys.W = true end
-        if input.KeyCode == Enum.KeyCode.S then keys.S = true end
-        if input.KeyCode == Enum.KeyCode.A then keys.A = true end
-        if input.KeyCode == Enum.KeyCode.D then keys.D = true end
-        if input.KeyCode == Enum.KeyCode.Space then keys.Space = true end
-        if input.KeyCode == Enum.KeyCode.LeftShift or input.KeyCode == Enum.KeyCode.RightShift then keys.Shift = true end
-    end)
-
-    UserInputService.InputEnded:Connect(function(input)
-        if input.KeyCode == Enum.KeyCode.W then keys.W = false end
-        if input.KeyCode == Enum.KeyCode.S then keys.S = false end
-        if input.KeyCode == Enum.KeyCode.A then keys.A = false end
-        if input.KeyCode == Enum.KeyCode.D then keys.D = false end
-        if input.KeyCode == Enum.KeyCode.Space then keys.Space = false end
-        if input.KeyCode == Enum.KeyCode.LeftShift or input.KeyCode == Enum.KeyCode.Shift then keys.Shift = false end
-    end)
-
-    createToggle("Fly (Controlled)", function(state)
+    createToggle("Fly (Mobile)", function(state)
         flying = state
         local char = LocalPlayer.Character
         if not char or not char:FindFirstChild("HumanoidRootPart") then return end
@@ -328,18 +309,22 @@ task.spawn(function()
             bg.CFrame = rootPart.CFrame
             
             flyConn = RunService.RenderStepped:Connect(function()
-                if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+                if not char or not char:FindFirstChild("HumanoidRootPart") or not humanoid then return end
                 local cam = Workspace.CurrentCamera
-                local moveDir = Vector3.new(0, 0, 0)
                 
-                if keys.W then moveDir = moveDir + cam.CFrame.LookVector end
-                if keys.S then moveDir = moveDir - cam.CFrame.LookVector end
-                if keys.A then moveDir = moveDir - cam.CFrame.RightVector end
-                if keys.D then moveDir = moveDir + cam.CFrame.RightVector end
-                if keys.Space then moveDir = moveDir + Vector3.new(0, 1, 0) end
-                if keys.Shift then moveDir = moveDir - Vector3.new(0, 1, 0) end
+                -- Берем направление движения с мобильного джойстика Роблокса
+                local moveDir = humanoid.MoveDirection
+                local velocity = Vector3.new(0, 0, 0)
                 
-                bv.Velocity = moveDir * flySpeed
+                if moveDir.Magnitude > 0 then
+                    -- Если двигаешь джойстик, летим туда, куда указывает камера и джойстик
+                    local camFlat = Vector3.new(cam.CFrame.LookVector.X, 0, cam.CFrame.LookVector.Z).Unit
+                    local camRightFlat = Vector3.new(cam.CFrame.RightVector.X, 0, cam.CFrame.RightVector.Z).Unit
+                    
+                    velocity = (camFlat * moveDir.Z + camRightFlat * moveDir.X) * flySpeed
+                end
+                
+                bv.Velocity = velocity
                 bg.CFrame = cam.CFrame
             end)
         else
