@@ -1,4 +1,4 @@
--- Vip Script [Tiktok@symashedshi73] - Full Script (Free Look Fly + Up/Down buttons)
+-- Vip Script [Tiktok@symashedshi73] - Full Script (No Fly Version)
 task.spawn(function()
     local CoreGui = game:GetService("CoreGui")
     local Players = game:GetService("Players")
@@ -11,9 +11,6 @@ task.spawn(function()
 
     if CoreGui:FindFirstChild("VipScriptHub") then
         CoreGui.VipScriptHub:Destroy()
-    end
-    if CoreGui:FindFirstChild("FlyGuiPanel") then
-        CoreGui.FlyGuiPanel:Destroy()
     end
 
     local ScreenGui = Instance.new("ScreenGui")
@@ -82,9 +79,6 @@ task.spawn(function()
     UICornerClose.Parent = CloseBtn
 
     CloseBtn.MouseButton1Click:Connect(function()
-        if CoreGui:FindFirstChild("FlyGuiPanel") then
-            CoreGui.FlyGuiPanel:Destroy()
-        end
         ScreenGui:Destroy()
     end)
 
@@ -290,127 +284,7 @@ task.spawn(function()
         end
     end)
 
-    -- 2. FULL 3D FLY (Джойстик следует за камерой вверх/вниз + кнопки UP/DOWN)
-    local flying = false
-    local flySpeed = 50
-    local bv, bg, flyConn
-    local movingUp = false
-    local movingDown = false
-    local flyGuiPanel = nil
-
-    createToggle("Fly (Pro)", function(state)
-        flying = state
-        local char = LocalPlayer.Character
-        if not char or not char:FindFirstChild("HumanoidRootPart") then return end
-        local rootPart = char.HumanoidRootPart
-        local humanoid = char:FindFirstChildOfClass("Humanoid")
-        
-        if flying then
-            if humanoid then humanoid.PlatformStand = true end
-            
-            bv = Instance.new("BodyVelocity", rootPart)
-            bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-            bv.Velocity = Vector3.new(0, 0, 0)
-            
-            bg = Instance.new("BodyGyro", rootPart)
-            bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-            bg.CFrame = rootPart.CFrame
-
-            if not CoreGui:FindFirstChild("FlyGuiPanel") then
-                flyGuiPanel = Instance.new("ScreenGui")
-                flyGuiPanel.Name = "FlyGuiPanel"
-                flyGuiPanel.Parent = CoreGui
-
-                local frame = Instance.new("Frame")
-                frame.Parent = flyGuiPanel
-                frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-                frame.BorderColor3 = Color3.fromRGB(210, 100, 255)
-                frame.BorderSizePixel = 2
-                frame.Position = UDim2.new(0, 30, 0, 150)
-                frame.Size = UDim2.new(0, 110, 0, 90)
-                frame.Active = true
-                frame.Draggable = true
-
-                local corner = Instance.new("UICorner")
-                corner.CornerRadius = UDim.new(0, 8)
-                corner.Parent = frame
-
-                local btnUp = Instance.new("TextButton")
-                btnUp.Parent = frame
-                btnUp.BackgroundColor3 = Color3.fromRGB(50, 180, 50)
-                btnUp.Position = UDim2.new(0, 8, 0, 8)
-                btnUp.Size = UDim2.new(1, -16, 0, 33)
-                btnUp.Font = Enum.Font.SourceSansBold
-                btnUp.Text = "UP ⬆"
-                btnUp.TextColor3 = Color3.fromRGB(255, 255, 255)
-                btnUp.TextSize = 16
-
-                local cUp = Instance.new("UICorner")
-                cUp.CornerRadius = UDim.new(0, 6)
-                cUp.Parent = btnUp
-
-                btnUp.MouseButton1Down:Connect(function() movingUp = true end)
-                btnUp.MouseButton1Up:Connect(function() movingUp = false end)
-                btnUp.TouchEnded:Connect(function() movingUp = false end)
-
-                local btnDown = Instance.new("TextButton")
-                btnDown.Parent = frame
-                btnDown.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
-                btnDown.Position = UDim2.new(0, 8, 0, 48)
-                btnDown.Size = UDim2.new(1, -16, 0, 33)
-                btnDown.Font = Enum.Font.SourceSansBold
-                btnDown.Text = "DOWN ⬇"
-                btnDown.TextColor3 = Color3.fromRGB(255, 255, 255)
-                btnDown.TextSize = 16
-
-                local cDown = Instance.new("UICorner")
-                cDown.CornerRadius = UDim.new(0, 6)
-                cDown.Parent = btnDown
-
-                btnDown.MouseButton1Down:Connect(function() movingDown = true end)
-                btnDown.MouseButton1Up:Connect(function() movingDown = false end)
-                btnDown.TouchEnded:Connect(function() movingDown = false end)
-            end
-            
-            flyConn = RunService.RenderStepped:Connect(function()
-                if not char or not char:FindFirstChild("HumanoidRootPart") or not humanoid then return end
-                local cam = Workspace.CurrentCamera
-                local moveDir = humanoid.MoveDirection
-                local velocity = Vector3.new(0, 0, 0)
-                
-                -- Теперь полет полностью зависит от взгляда камеры (LookVector и RightVector)
-                if moveDir.Magnitude > 0 then
-                    local look = cam.CFrame.LookVector
-                    local right = cam.CFrame.RightVector
-                    velocity = (look * moveDir.Z + right * moveDir.X) * flySpeed
-                end
-
-                -- Если зажаты экранные кнопки UP/DOWN, они тоже работают вдобавок
-                if movingUp then
-                    velocity = velocity + Vector3.new(0, flySpeed, 0)
-                end
-                if movingDown then
-                    velocity = velocity - Vector3.new(0, flySpeed, 0)
-                end
-                
-                bv.Velocity = velocity
-                bg.CFrame = cam.CFrame
-            end)
-        else
-            if flyConn then flyConn:Disconnect() end
-            if bv then bv:Destroy() end
-            if bg then bg:Destroy() end
-            if CoreGui:FindFirstChild("FlyGuiPanel") then
-                CoreGui.FlyGuiPanel:Destroy()
-            end
-            if humanoid then humanoid.PlatformStand = false end
-            movingUp = false
-            movingDown = false
-        end
-    end)
-    createSlider("Fly Speed", 20, 150, 50, function(val) flySpeed = val end)
-
-    -- 3. NOCLIP
+    -- 2. NOCLIP
     local noclipConn
     createToggle("Noclip", function(state)
         if state then
@@ -426,7 +300,7 @@ task.spawn(function()
         end
     end)
 
-    -- 4. SPEED
+    -- 3. SPEED
     local currentSpeed = 16
     createToggle("Speed Boost", function(state)
         task.spawn(function()
@@ -442,7 +316,7 @@ task.spawn(function()
     end)
     createSlider("Speed Value", 16, 150, 32, function(val) currentSpeed = val end)
 
-    -- 5. FPS & PING
+    -- 4. FPS & PING
     local fpsLabel = Instance.new("TextLabel")
     fpsLabel.Parent = ScreenGui
     fpsLabel.BackgroundTransparency = 0.4
@@ -467,7 +341,7 @@ task.spawn(function()
     end)
     createToggle("FPS/Ping Counter", function(state) fpsLabel.Visible = state end)
 
-    -- 6. AUTO-CLICKER
+    -- 5. AUTO-CLICKER
     local autoClicking = false
     task.spawn(function()
         while true do
@@ -481,7 +355,7 @@ task.spawn(function()
     end)
     createToggle("Auto-Clicker", function(state) autoClicking = state end)
 
-    -- 7. FULBRIGHT
+    -- 6. FULBRIGHT
     createToggle("Fulbright", function(state)
         Lighting.Brightness = state and 2 or 1
         Lighting.GlobalShadows = not state
