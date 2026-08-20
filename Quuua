@@ -1,4 +1,4 @@
--- Vip Script [Tiktok@symashedshi73] - Full Script
+-- Vip Script [Tiktok@symashedshi73] - Full Script (Fixed Fly)
 task.spawn(function()
     local CoreGui = game:GetService("CoreGui")
     local Players = game:GetService("Players")
@@ -284,12 +284,32 @@ task.spawn(function()
         end
     end)
 
-    -- 2. FIXED FLY (Полный контроль полета камерой)
+    -- 2. CONTROLLED FLY (Полет с остановкой на месте)
     local flying = false
     local flySpeed = 50
     local bv, bg, flyConn
+    local keys = {W = false, S = false, A = false, D = false, Space = false, Shift = false}
 
-    createToggle("Fly (Camera Look)", function(state)
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if gameProcessed then return end
+        if input.KeyCode == Enum.KeyCode.W then keys.W = true end
+        if input.KeyCode == Enum.KeyCode.S then keys.S = true end
+        if input.KeyCode == Enum.KeyCode.A then keys.A = true end
+        if input.KeyCode == Enum.KeyCode.D then keys.D = true end
+        if input.KeyCode == Enum.KeyCode.Space then keys.Space = true end
+        if input.KeyCode == Enum.KeyCode.LeftShift or input.KeyCode == Enum.KeyCode.RightShift then keys.Shift = true end
+    end)
+
+    UserInputService.InputEnded:Connect(function(input)
+        if input.KeyCode == Enum.KeyCode.W then keys.W = false end
+        if input.KeyCode == Enum.KeyCode.S then keys.S = false end
+        if input.KeyCode == Enum.KeyCode.A then keys.A = false end
+        if input.KeyCode == Enum.KeyCode.D then keys.D = false end
+        if input.KeyCode == Enum.KeyCode.Space then keys.Space = false end
+        if input.KeyCode == Enum.KeyCode.LeftShift or input.KeyCode == Enum.KeyCode.Shift then keys.Shift = false end
+    end)
+
+    createToggle("Fly (Controlled)", function(state)
         flying = state
         local char = LocalPlayer.Character
         if not char or not char:FindFirstChild("HumanoidRootPart") then return end
@@ -310,9 +330,16 @@ task.spawn(function()
             flyConn = RunService.RenderStepped:Connect(function()
                 if not char or not char:FindFirstChild("HumanoidRootPart") then return end
                 local cam = Workspace.CurrentCamera
+                local moveDir = Vector3.new(0, 0, 0)
                 
-                -- Летим туда, куда смотрит камера
-                bv.Velocity = cam.CFrame.LookVector * flySpeed
+                if keys.W then moveDir = moveDir + cam.CFrame.LookVector end
+                if keys.S then moveDir = moveDir - cam.CFrame.LookVector end
+                if keys.A then moveDir = moveDir - cam.CFrame.RightVector end
+                if keys.D then moveDir = moveDir + cam.CFrame.RightVector end
+                if keys.Space then moveDir = moveDir + Vector3.new(0, 1, 0) end
+                if keys.Shift then moveDir = moveDir - Vector3.new(0, 1, 0) end
+                
+                bv.Velocity = moveDir * flySpeed
                 bg.CFrame = cam.CFrame
             end)
         else
@@ -406,4 +433,3 @@ task.spawn(function()
 
     MainContainer.CanvasSize = UDim2.new(0, 0, 0, yOffset + 20)
 end)
-
