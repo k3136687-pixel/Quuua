@@ -1,320 +1,117 @@
--- Quuua-Hub v1.0 (Part 1: UI, Movable Mini-Button, Sliders & Languages)
-local Players = game:GetService("Players")
-local CoreGui = game:GetService("CoreGui")
-local UserInputService = game:GetService("UserInputService")
-local LocalPlayer = Players.LocalPlayer
-
-if CoreGui:FindFirstChild("QuuuaHub") then
-    CoreGui.QuuuaHub:Destroy()
-end
-
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "QuuuaHub"
-ScreenGui.Parent = CoreGui
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-
--- Главное окно
-local MainFrame = Instance.new("Frame")
-MainFrame.Name = "MainFrame"
-MainFrame.Parent = ScreenGui
-MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-MainFrame.BackgroundTransparency = 0
-MainFrame.BorderColor3 = Color3.fromRGB(0, 255, 128)
-MainFrame.BorderSizePixel = 2
-MainFrame.Position = UDim2.new(0.5, -150, 0.5, -200)
-MainFrame.Size = UDim2.new(0, 300, 0, 420)
-MainFrame.Active = true
-
--- Перетаскивание главного окна
-local dragging, dragInput, dragStart, startPos
-MainFrame.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        dragStart = input.Position
-        startPos = MainFrame.Position
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-            end
-        end)
-    end
-end)
-
-MainFrame.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-        dragInput = input
-    end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-    if input == dragInput and dragging then
-        local delta = input.Position - dragStart
-        MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
-end)
-
--- Ресайз окна
-local Resizer = Instance.new("TextButton")
-Resizer.Parent = MainFrame
-Resizer.BackgroundColor3 = Color3.fromRGB(0, 255, 128)
-Resizer.BorderSizePixel = 0
-Resizer.Position = UDim2.new(1, -10, 1, -10)
-Resizer.Size = UDim2.new(0, 10, 0, 10)
-Resizer.Text = ""
-
-local resizing = false
-Resizer.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        resizing = true
-    end
-end)
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        resizing = false
-    end
-end)
-UserInputService.InputChanged:Connect(function(input)
-    if resizing and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-        local mousePos = input.Position
-        local newSizeX = math.clamp(mousePos.X - MainFrame.AbsolutePosition.X, 260, 600)
-        local newSizeY = math.clamp(mousePos.Y - MainFrame.AbsolutePosition.Y, 320, 750)
-        MainFrame.Size = UDim2.new(0, newSizeX, 0, newSizeY)
-    end
-end)
-
--- Мини-плашка сворачивания
-local MiniButton = Instance.new("TextButton")
-MiniButton.Name = "MiniButton"
-MiniButton.Parent = ScreenGui
-MiniButton.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-MiniButton.BorderColor3 = Color3.fromRGB(0, 255, 128)
-MiniButton.BorderSizePixel = 1
-MiniButton.Position = UDim2.new(0, 10, 0.5, -25)
-MiniButton.Size = UDim2.new(0, 110, 0, 45)
-MiniButton.Visible = false
-MiniButton.Font = Enum.Font.SourceSansBold
-MiniButton.Text = "Quuua\n@symashedshi73"
-MiniButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-MiniButton.TextSize = 11
-MiniButton.Active = true
-
-local miniDragging, miniDragInput, miniDragStart, miniStartPos
-local isDraggingMini = false
-
-MiniButton.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        miniDragging = true
-        isDraggingMini = false
-        miniDragStart = input.Position
-        miniStartPos = MiniButton.Position
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                miniDragging = false
-            end
-        end)
-    end
-end)
-
-MiniButton.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-        miniDragInput = input
-    end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-    if input == miniDragInput and miniDragging then
-        local delta = input.Position - miniDragStart
-        if delta.Magnitude > 5 then
-            isDraggingMini = true
-            MiniButton.Position = UDim2.new(miniStartPos.X.Scale, miniStartPos.X.Offset + delta.X, miniStartPos.Y.Scale, miniStartPos.Y.Offset + delta.Y)
-        end
-    end
-end)
-
-MiniButton.MouseButton1Click:Connect(function()
-    if not isDraggingMini then
-        MiniButton.Visible = false
-        MainFrame.Visible = true
-    end
-end)
-
--- Шапка
-local TopBar = Instance.new("Frame")
-TopBar.Parent = MainFrame
-TopBar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-TopBar.BorderSizePixel = 0
-TopBar.Size = UDim2.new(1, 0, 0, 45)
-
-local Title = Instance.new("TextLabel")
-Title.Parent = TopBar
-Title.BackgroundTransparency = 1
-Title.Position = UDim2.new(0, 10, 0, 2)
-Title.Size = UDim2.new(0, 150, 0, 22)
-Title.Font = Enum.Font.SourceSansBold
-Title.Text = "quuua-hub"
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.TextSize = 18
-Title.TextXAlignment = Enum.TextXAlignment.Left
-
-local SubTitle = Instance.new("TextLabel")
-SubTitle.Parent = TopBar
-SubTitle.BackgroundTransparency = 1
-SubTitle.Position = UDim2.new(0, 10, 0, 22)
-SubTitle.Size = UDim2.new(0, 150, 0, 18)
-SubTitle.Font = Enum.Font.SourceSans
-SubTitle.Text = "Tiktok @symashedshi"
-SubTitle.TextColor3 = Color3.fromRGB(180, 180, 180)
-SubTitle.TextSize = 11
-SubTitle.TextXAlignment = Enum.TextXAlignment.Left
-
-local CloseBtn = Instance.new("TextButton")
-CloseBtn.Parent = TopBar
-CloseBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
-CloseBtn.BorderSizePixel = 0
-CloseBtn.Position = UDim2.new(1, -35, 0, 8)
-CloseBtn.Size = UDim2.new(0, 28, 0, 28)
-CloseBtn.Font = Enum.Font.SourceSansBold
-CloseBtn.Text = "X"
-CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-CloseBtn.TextSize = 14
-
-local MinimizeBtn = Instance.new("TextButton")
-MinimizeBtn.Parent = TopBar
-MinimizeBtn.BackgroundColor3 = Color3.fromRGB(240, 240, 240)
-MinimizeBtn.BorderSizePixel = 0
-MinimizeBtn.Position = UDim2.new(1, -70, 0, 8)
-MinimizeBtn.Size = UDim2.new(0, 28, 0, 28)
-MinimizeBtn.Font = Enum.Font.SourceSansBold
-MinimizeBtn.Text = "-"
-MinimizeBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
-MinimizeBtn.TextSize = 16
-
--- Навигация
-local NavFrame = Instance.new("Frame")
-NavFrame.Parent = MainFrame
-NavFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-NavFrame.BorderSizePixel = 0
-NavFrame.Position = UDim2.new(0, 5, 0, 50)
-NavFrame.Size = UDim2.new(1, -10, 0, 55)
-
-local TabMain = Instance.new("TextButton")
-TabMain.Parent = NavFrame
-TabMain.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-TabMain.BorderSizePixel = 0
-TabMain.Position = UDim2.new(0, 5, 0, 5)
-TabMain.Size = UDim2.new(0, 110, 0, 22)
-TabMain.Font = Enum.Font.SourceSansBold
-TabMain.TextColor3 = Color3.fromRGB(255, 255, 255)
-TabMain.TextSize = 13
-
-local TabCustom = Instance.new("TextButton")
-TabCustom.Parent = NavFrame
-TabCustom.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-TabCustom.BorderSizePixel = 0
-TabCustom.Position = UDim2.new(0, 5, 0, 30)
-TabCustom.Size = UDim2.new(0, 110, 0, 22)
-TabCustom.Font = Enum.Font.SourceSansBold
-TabCustom.TextColor3 = Color3.fromRGB(200, 200, 200)
-TabCustom.TextSize = 13
-
-local LangLabel = Instance.new("TextLabel")
-LangLabel.Parent = NavFrame
-LangLabel.BackgroundTransparency = 1
-LangLabel.Position = UDim2.new(0, 125, 0, 2)
-LangLabel.Size = UDim2.new(0, 150, 0, 20)
-LangLabel.Font = Enum.Font.SourceSansBold
-LangLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-LangLabel.TextSize = 13
-LangLabel.TextXAlignment = Enum.TextXAlignment.Left
-
-local LangRU = Instance.new("TextButton")
-LangRU.Parent = NavFrame
-LangRU.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-LangRU.Position = UDim2.new(0, 125, 0, 25)
-LangRU.Size = UDim2.new(0, 45, 0, 24)
-LangRU.Text = "🇷🇺"
-LangRU.TextSize = 16
-
-local LangEN = Instance.new("TextButton")
-LangEN.Parent = NavFrame
-LangEN.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-LangEN.Position = UDim2.new(0, 175, 0, 25)
-LangEN.Size = UDim2.new(0, 45, 0, 24)
-LangEN.Text = "🇬🇧"
-LangEN.TextSize = 16
-
-local LangUA = Instance.new("TextButton")
-LangUA.Parent = NavFrame
-LangUA.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-LangUA.Position = UDim2.new(0, 225, 0, 25)
-LangUA.Size = UDim2.new(0, 45, 0, 24)
-LangUA.Text = "🇺🇦"
-LangUA.TextSize = 16
-
--- Контейнеры (сохраняем в getgenv, чтобы Часть 2 их увидела)
-getgenv().QuuuaScreenGui = ScreenGui
-getgenv().ContainerMain = Instance.new("ScrollingFrame")
-getgenv().ContainerMain.Parent = MainFrame
-getgenv().ContainerMain.BackgroundTransparency = 1
-getgenv().ContainerMain.Position = UDim2.new(0, 5, 0, 110)
-getgenv().ContainerMain.Size = UDim2.new(1, -10, 1, -140)
-getgenv().ContainerMain.CanvasSize = UDim2.new(0, 0, 0, 1400)
-getgenv().ContainerMain.ScrollBarThickness = 4
-
-getgenv().ContainerCustom = Instance.new("ScrollingFrame")
-getgenv().ContainerCustom.Parent = MainFrame
-getgenv().ContainerCustom.BackgroundTransparency = 1
-getgenv().ContainerCustom.Position = UDim2.new(0, 5, 0, 110)
-getgenv().ContainerCustom.Size = UDim2.new(1, -10, 1, -140)
-getgenv().ContainerCustom.CanvasSize = UDim2.new(0, 0, 0, 150)
-getgenv().ContainerCustom.ScrollBarThickness = 4
-getgenv().ContainerCustom.Visible = false
-
-local Footer = Instance.new("TextLabel")
-Footer.Parent = MainFrame
-Footer.BackgroundTransparency = 1
-Footer.Position = UDim2.new(0, 0, 1, -22)
-Footer.Size = UDim2.new(1, 0, 0, 20)
-Footer.Font = Enum.Font.SourceSansItalic
-Footer.Text = "*Демо версия 1.0*"
-Footer.TextColor3 = Color3.fromRGB(150, 150, 150)
-Footer.TextSize = 11
-
-local L = {
-    ru = {main = "Основное", custom = "Кастомизация", lang = "Язык"},
-    en = {main = "Main", custom = "Customization", lang = "Language"},
-    ua = {main = "Основне", custom = "Кастомізація", lang = "Мова"}
-}
-local function setLang(langKey)
-    TabMain.Text = L[langKey].main
-    TabCustom.Text = L[langKey].custom
-    LangLabel.Text = L[langKey].lang
-end
-setLang("ru")
-
-LangRU.MouseButton1Click:Connect(function() setLang("ru") end)
-LangEN.MouseButton1Click:Connect(function() setLang("en") end)
-LangUA.MouseButton1Click:Connect(function() setLang("ua") end)
-
-TabMain.MouseButton1Click:Connect(function()
-    getgenv().ContainerMain.Visible = true
-    getgenv().ContainerCustom.Visible = false
-    TabMain.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    TabCustom.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-end)
-
-TabCustom.MouseButton1Click:Connect(function()
-    getgenv().ContainerMain.Visible = false
-    getgenv().ContainerCustom.Visible = true
-    TabCustom.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    TabMain.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-end)
-
-CloseBtn.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
-MinimizeBtn.MouseButton1Click:Connect(function() MainFrame.Visible = false; MiniButton.Visible = true end)
--- Quuua-Hub v1.0 (Part 2: Features, Mobile Fly GUI & Fixes)
+-- Quuua-Hub v1.0 (Part 1: UI & Styling)
 task.spawn(function()
-    -- Ждем пока Часть 1 создаст контейнеры
+    local CoreGui = game:GetService("CoreGui")
+    local Players = game:GetService("Players")
+    local LocalPlayer = Players.LocalPlayer
+
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "QuuuaHubGui"
+    ScreenGui.Parent = CoreGui
+    getgenv().QuuuaScreenGui = ScreenGui
+
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Parent = ScreenGui
+    MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    MainFrame.BorderColor3 = Color3.fromRGB(0, 255, 128)
+    MainFrame.BorderSizePixel = 2
+    MainFrame.Position = UDim2.new(0.5, -200, 0.5, -150)
+    MainFrame.Size = UDim2.new(0, 400, 0, 280)
+    MainFrame.Active = true
+    MainFrame.Draggable = true
+
+    local TopBar = Instance.new("Frame")
+    TopBar.Parent = MainFrame
+    TopBar.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+    TopBar.BorderColor3 = Color3.fromRGB(0, 255, 128)
+    TopBar.Size = UDim2.new(1, 0, 0, 30)
+
+    local Title = Instance.new("TextLabel")
+    Title.Parent = TopBar
+    Title.BackgroundTransparency = 1
+    Title.Position = UDim2.new(0, 10, 0, 0)
+    Title.Size = UDim2.new(0.7, 0, 1, 0)
+    Title.Font = Enum.Font.SourceSansBold
+    Title.Text = "Quuua-Hub v1.0 [Mobile Edition]"
+    Title.TextColor3 = Color3.fromRGB(0, 255, 128)
+    Title.TextSize = 16
+    Title.TextXAlignment = Enum.TextXAlignment.Left
+
+    local CloseBtn = Instance.new("TextButton")
+    CloseBtn.Parent = TopBar
+    CloseBtn.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
+    CloseBtn.BorderColor3 = Color3.fromRGB(255, 0, 0)
+    CloseBtn.Position = UDim2.new(1, -25, 0, 5)
+    CloseBtn.Size = UDim2.new(0, 20, 0, 20)
+    CloseBtn.Text = "X"
+    CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    CloseBtn.TextSize = 12
+    CloseBtn.Font = Enum.Font.SourceSansBold
+    CloseBtn.MouseButton1Click:Connect(function()
+        ScreenGui:Destroy()
+    end)
+
+    local TabMain = Instance.new("TextButton")
+    TabMain.Parent = MainFrame
+    TabMain.BackgroundColor3 = Color3.fromRGB(0, 100, 50)
+    TabMain.BorderColor3 = Color3.fromRGB(0, 255, 128)
+    TabMain.Position = UDim2.new(0, 10, 0, 35)
+    TabMain.Size = UDim2.new(0, 100, 0, 25)
+    TabMain.Font = Enum.Font.SourceSansBold
+    TabMain.Text = "Main Hacks"
+    TabMain.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TabMain.TextSize = 14
+
+    local TabCustom = Instance.new("TextButton")
+    TabCustom.Parent = MainFrame
+    TabCustom.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    TabCustom.BorderColor3 = Color3.fromRGB(60, 60, 60)
+    TabCustom.Position = UDim2.new(0, 115, 0, 35)
+    TabCustom.Size = UDim2.new(0, 100, 0, 25)
+    TabCustom.Font = Enum.Font.SourceSansBold
+    TabCustom.Text = "Custom"
+    TabCustom.TextColor3 = Color3.fromRGB(180, 180, 180)
+    TabCustom.TextSize = 14
+
+    local ContainerMain = Instance.new("ScrollingFrame")
+    ContainerMain.Parent = MainFrame
+    ContainerMain.BackgroundTransparency = 1
+    ContainerMain.Position = UDim2.new(0, 10, 0, 65)
+    ContainerMain.Size = UDim2.new(1, -20, 1, -75)
+    ContainerMain.CanvasSize = UDim2.new(0, 0, 0, 0)
+    ContainerMain.ScrollBarThickness = 4
+    ContainerMain.Visible = true
+    getgenv().ContainerMain = ContainerMain
+
+    local ContainerCustom = Instance.new("ScrollingFrame")
+    ContainerCustom.Parent = MainFrame
+    ContainerCustom.BackgroundTransparency = 1
+    ContainerCustom.Position = UDim2.new(0, 10, 0, 65)
+    ContainerCustom.Size = UDim2.new(1, -20, 1, -75)
+    ContainerCustom.CanvasSize = UDim2.new(0, 0, 0, 0)
+    ContainerCustom.ScrollBarThickness = 4
+    ContainerCustom.Visible = false
+    getgenv().ContainerCustom = ContainerCustom
+
+    TabMain.MouseButton1Click:Connect(function()
+        ContainerMain.Visible = true
+        ContainerCustom.Visible = false
+        TabMain.BackgroundColor3 = Color3.fromRGB(0, 100, 50)
+        TabMain.TextColor3 = Color3.fromRGB(255, 255, 255)
+        TabCustom.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        TabCustom.TextColor3 = Color3.fromRGB(180, 180, 180)
+    end)
+
+    TabCustom.MouseButton1Click:Connect(function()
+        ContainerMain.Visible = false
+        ContainerCustom.Visible = true
+        TabCustom.BackgroundColor3 = Color3.fromRGB(0, 100, 50)
+        TabCustom.TextColor3 = Color3.fromRGB(255, 255, 255)
+        TabMain.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        TabMain.TextColor3 = Color3.fromRGB(180, 180, 180)
+    end)
+end)
+-- Quuua-Hub v1.0 (Part 2: Core Functions & Mobile Fly)
+task.spawn(function()
     while not getgenv().ContainerMain or not getgenv().QuuuaScreenGui do
         task.wait(0.1)
     end
@@ -481,14 +278,61 @@ task.spawn(function()
     end)
 
     -- 5. Personal Teleport
-    local savedPos = nil
+    local tpPos = nil
+    local markerPart = nil
+    local tpConn = nil
+
     createToggle(ContainerMain, "Personal Teleport", function(state)
-        local char = LocalPlayer.Character
-        local root = char and char:FindFirstChild("HumanoidRootPart")
-        if state and root then
-            savedPos = root.CFrame
-        elseif not state and savedPos and root then
-            root.CFrame = savedPos
+        if state then
+            tpConn = UserInputService.InputBegan:Connect(function(input, gpe)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    if gpe then return end
+                    
+                    local cam = workspace.CurrentCamera
+                    local mousePos = UserInputService:GetMouseLocation()
+                    local unitRay = cam:ViewportPointToRay(mousePos.X, mousePos.Y)
+                    local raycastParams = RaycastParams.new()
+                    raycastParams.FilterDescendantsInstances = {LocalPlayer.Character}
+                    raycastParams.FilterType = Enum.RaycastFilterType.Exclude
+                    
+                    local result = workspace:Raycast(unitRay.Origin, unitRay.Direction * 1000, raycastParams)
+                    if result then
+                        tpPos = result.Position + Vector3.new(0, 3, 0)
+                        
+                        if markerPart then markerPart:Destroy() end
+                        markerPart = Instance.new("Part")
+                        markerPart.Size = Vector3.new(1, 1, 1)
+                        markerPart.Shape = Enum.PartType.Ball
+                        markerPart.Material = Enum.Material.Neon
+                        markerPart.Color = Color3.fromRGB(0, 255, 128)
+                        markerPart.Anchored = true
+                        markerPart.CanCollide = false
+                        markerPart.Position = tpPos
+                        markerPart.Parent = workspace
+                    end
+                end
+            end)
+
+            local lastJumpState = false
+            task.spawn(function()
+                while state and task.wait(0.1) do
+                    local char = LocalPlayer.Character
+                    if char then
+                        local hum = char:FindFirstChildOfClass("Humanoid")
+                        local root = char:FindFirstChild("HumanoidRootPart")
+                        if hum and root and tpPos then
+                            if hum.Jump and not lastJumpState then
+                                root.CFrame = CFrame.new(tpPos)
+                            end
+                            lastJumpState = hum.Jump
+                        end
+                    end
+                end
+            end)
+        else
+            if tpConn then tpConn:Disconnect() end
+            if markerPart then markerPart:Destroy() end
+            tpPos = nil
         end
     end)
 
@@ -663,6 +507,7 @@ task.spawn(function()
         
         if flying then
             local rootPart = char.HumanoidRootPart
+            local hum = char:FindFirstChildOfClass("Humanoid")
             bv = Instance.new("BodyVelocity", rootPart)
             bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
             bg = Instance.new("BodyGyro", rootPart)
@@ -671,10 +516,10 @@ task.spawn(function()
             flyConn = RunService.RenderStepped:Connect(function()
                 local cam = Workspace.CurrentCamera
                 local moveDir = Vector3.new(0,0,0)
-                if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDir = moveDir + cam.CFrame.LookVector end
-                if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDir = moveDir - cam.CFrame.LookVector end
-                if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDir = moveDir - cam.CFrame.RightVector end
-                if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDir = moveDir + cam.CFrame.RightVector end
+                
+                if hum then
+                    moveDir = hum.MoveDirection
+                end
                 
                 bv.Velocity = (moveDir * flySpeed) + Vector3.new(0, flyVertical, 0)
                 bg.CFrame = cam.CFrame
@@ -695,6 +540,112 @@ task.spawn(function()
     end)
 
     createSlider(ContainerMain, "Fly Speed", 20, 200, 50, function(val) flySpeed = val end)
+end)
+-- Quuua-Hub v1.0 (Part 3: Extra Utilities & Customization)
+task.spawn(function()
+    while not getgenv().ContainerMain or not getgenv().ContainerCustom do
+        task.wait(0.1)
+    end
+
+    local RunService = game:GetService("RunService")
+    local VirtualUser = game:GetService("VirtualUser")
+    local Lighting = game:GetService("Lighting")
+    local Players = game:GetService("Players")
+    local LocalPlayer = Players.LocalPlayer
+
+    local ContainerMain = getgenv().ContainerMain
+    local ContainerCustom = getgenv().ContainerCustom
+
+    local yOffset = 610 -- Продолжение отступов после первой части главного контейнера
+
+    local function createToggle(parent, name, callback)
+        local btn = Instance.new("TextButton")
+        btn.Parent = parent
+        btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        btn.BorderColor3 = Color3.fromRGB(60, 60, 60)
+        btn.Position = UDim2.new(0, 5, 0, yOffset)
+        btn.Size = UDim2.new(1, -10, 0, 35)
+        btn.Font = Enum.Font.SourceSansBold
+        btn.Text = "  " .. name .. " [OFF]"
+        btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+        btn.TextSize = 14
+        btn.TextXAlignment = Enum.TextXAlignment.Left
+        
+        local active = false
+        btn.MouseButton1Click:Connect(function()
+            active = not active
+            if active then
+                btn.BackgroundColor3 = Color3.fromRGB(0, 80, 40)
+                btn.BorderColor3 = Color3.fromRGB(0, 255, 128)
+                btn.Text = "  " .. name .. " [ON]"
+                btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            else
+                btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+                btn.BorderColor3 = Color3.fromRGB(60, 60, 60)
+                btn.Text = "  " .. name .. " [OFF]"
+                btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+            end
+            callback(active)
+        end)
+        yOffset = yOffset + 40
+    end
+
+    local function createSlider(parent, name, min, max, default, callback)
+        local frame = Instance.new("Frame")
+        frame.Parent = parent
+        frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+        frame.BorderColor3 = Color3.fromRGB(50, 50, 50)
+        frame.Position = UDim2.new(0, 5, 0, yOffset)
+        frame.Size = UDim2.new(1, -10, 0, 45)
+        
+        local label = Instance.new("TextLabel")
+        label.Parent = frame
+        label.BackgroundTransparency = 1
+        label.Position = UDim2.new(0, 5, 0, 2)
+        label.Size = UDim2.new(1, -10, 0, 20)
+        label.Font = Enum.Font.SourceSansBold
+        label.Text = name .. ": " .. default
+        label.TextColor3 = Color3.fromRGB(220, 220, 220)
+        label.TextSize = 13
+        label.TextXAlignment = Enum.TextXAlignment.Left
+        
+        local sliderBg = Instance.new("TextButton")
+        sliderBg.Parent = frame
+        sliderBg.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        sliderBg.BorderSizePixel = 0
+        sliderBg.Position = UDim2.new(0, 5, 0, 25)
+        sliderBg.Size = UDim2.new(1, -10, 0, 12)
+        sliderBg.Text = ""
+        
+        local sliderFill = Instance.new("Frame")
+        sliderFill.Parent = sliderBg
+        sliderFill.BackgroundColor3 = Color3.fromRGB(0, 255, 128)
+        sliderFill.BorderSizePixel = 0
+        sliderFill.Size = UDim2.new((default - min)/(max - min), 0, 1, 0)
+        
+        local UserInputService = game:GetService("UserInputService")
+        local draggingSlider = false
+        sliderBg.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                draggingSlider = true
+            end
+        end)
+        UserInputService.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                draggingSlider = false
+            end
+        end)
+        UserInputService.InputChanged:Connect(function(input)
+            if draggingSlider and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                local pos = math.clamp((input.Position.X - sliderBg.AbsolutePosition.X) / sliderBg.AbsoluteSize.X, 0, 1)
+                sliderFill.Size = UDim2.new(pos, 0, 1, 0)
+                local val = math.floor(min + (max - min) * pos)
+                label.Text = name .. ": " .. val
+                callback(val)
+            end
+        end)
+        yOffset = yOffset + 50
+    end
 
     -- 10. Anti-AFK
     local afkConn
@@ -794,7 +745,7 @@ task.spawn(function()
     local skyRunning = false
     createToggle(ContainerCustom, "Rainbow Sky Mode", function(state)
         skyRunning = state
-task.spawn(function()
+        task.spawn(function()
             local hue = 0
             while skyRunning do
                 hue = (hue + 1) % 360
