@@ -1,4 +1,4 @@
--- Vip Script [Tiktok@symashedshi73] - Full Script (Free Look Fly + Up/Down buttons)
+-- Vip Script [Tiktok@symashedshi73] - Full Script (Fixed Mobile Fly)
 task.spawn(function()
     local CoreGui = game:GetService("CoreGui")
     local Players = game:GetService("Players")
@@ -290,7 +290,7 @@ task.spawn(function()
         end
     end)
 
-    -- 2. FULL 3D FLY (Джойстик следует за камерой вверх/вниз + кнопки UP/DOWN)
+    -- 2. FULL 3D FLY (Fixed Mobile Controls)
     local flying = false
     local flySpeed = 50
     local bv, bg, flyConn
@@ -349,9 +349,16 @@ task.spawn(function()
                 cUp.CornerRadius = UDim.new(0, 6)
                 cUp.Parent = btnUp
 
-                btnUp.MouseButton1Down:Connect(function() movingUp = true end)
-                btnUp.MouseButton1Up:Connect(function() movingUp = false end)
-                btnUp.TouchEnded:Connect(function() movingUp = false end)
+                btnUp.InputBegan:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                        movingUp = true
+                    end
+                end)
+                btnUp.InputEnded:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                        movingUp = false
+                    end
+                end)
 
                 local btnDown = Instance.new("TextButton")
                 btnDown.Parent = frame
@@ -367,25 +374,30 @@ task.spawn(function()
                 cDown.CornerRadius = UDim.new(0, 6)
                 cDown.Parent = btnDown
 
-                btnDown.MouseButton1Down:Connect(function() movingDown = true end)
-                btnDown.MouseButton1Up:Connect(function() movingDown = false end)
-                btnDown.TouchEnded:Connect(function() movingDown = false end)
+                btnDown.InputBegan:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                        movingDown = true
+                    end
+                end)
+                btnDown.InputEnded:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                        movingDown = false
+                    end
+                end)
             end
             
             flyConn = RunService.RenderStepped:Connect(function()
-                if not char or not char:FindFirstChild("HumanoidRootPart") or not humanoid then return end
+                if not char or not char:FindFirstChild("HumanoidRootPart") then return end
                 local cam = Workspace.CurrentCamera
-                local moveDir = humanoid.MoveDirection
                 local velocity = Vector3.new(0, 0, 0)
                 
-                -- Теперь полет полностью зависит от взгляда камеры (LookVector и RightVector)
-                if moveDir.Magnitude > 0 then
-                    local look = cam.CFrame.LookVector
-                    local right = cam.CFrame.RightVector
-                    velocity = (look * moveDir.Z + right * moveDir.X) * flySpeed
+                -- Прямое считывание нажатых клавиш движения (WASD / Джойстик на мобилке)
+                local moveVector = humanoid.MoveDirection
+                if moveVector.Magnitude > 0 then
+                    velocity = cam.CFrame.LookVector * (moveVector.Z * -flySpeed) + cam.CFrame.RightVector * (moveVector.X * flySpeed)
                 end
 
-                -- Если зажаты экранные кнопки UP/DOWN, они тоже работают вдобавок
+                -- Управление кнопками UP / DOWN с панели
                 if movingUp then
                     velocity = velocity + Vector3.new(0, flySpeed, 0)
                 end
@@ -475,7 +487,7 @@ task.spawn(function()
             if autoClicking then
                 VirtualUser:Button1Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
                 task.wait(0.05)
-                VirtualUser:Button1Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+                VirtualUser:Button1Up(Vector2.new(0,0), workspace.CurrentCamera. / CFrame)
             end
         end
     end)
@@ -483,6 +495,10 @@ task.spawn(function()
 
     -- 7. FULBRIGHT
     createToggle("Fulbright", function(state)
+        Lighting.Brightness = state and 2 or 1
+        Lighting.GlobalShadows = not state
+    end)
+    createSlider("Light Brightness", 1, 10, 2, function(val)
         Lighting.Brightness = state and 2 or 1
         Lighting.GlobalShadows = not state
     end)
